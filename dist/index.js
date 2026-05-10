@@ -9,18 +9,20 @@ const app = express();
 app.use(express.json());
 const port = Number(process.env.PORT ?? 3001);
 const region = process.env.AWS_REGION ?? 'us-east-1';
-const accessKeyId = process.env.AWS_ACCESS_KEY_ID ?? 'local';
-const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY ?? 'local';
 const dynamoEndpoint = process.env.DYNAMODB_ENDPOINT || undefined;
 const clientsTable = process.env.CLIENTS_TABLE ?? 'clients';
 const addressesTable = process.env.CLIENT_ADDRESSES_TABLE ?? 'client_addresses';
 const productsTable = process.env.PRODUCTS_TABLE ?? 'products';
+const credentials = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+    ? {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        ...(process.env.AWS_SESSION_TOKEN ? { sessionToken: process.env.AWS_SESSION_TOKEN } : {}),
+    }
+    : undefined;
 const dynamo = DynamoDBDocumentClient.from(new DynamoDBClient({
     region,
-    credentials: {
-        accessKeyId,
-        secretAccessKey,
-    },
+    credentials,
     endpoint: dynamoEndpoint,
 }), {
     marshallOptions: {
